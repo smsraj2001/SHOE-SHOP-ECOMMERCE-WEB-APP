@@ -1,15 +1,18 @@
 # SHOE-SHOP-ECOMMERCE-WEB-APP
 A MERN stack ecommerce website with fully functional front and back end with Mongo DB for database.
 
+## ATTENTION DEAR USERS
+Please don't skip any part of the documentation you are going to read. It was documented elaborately, so that you could work on this project without troubles. Thank you for your patience :)
+
 ## SYNOPSIS
 
 An E-Commerce website for Shoe Shop which uses ```MERN``` (Mongo, Express JS, React JS and Node JS) stack.
 
 ## DESCRIPTION
-v~ 1.1\
+v~ 1.2\
 Some features are:-
 
-- Dual role of ```User``` and ```Admin``` (For admin, in the DB change role to 1 for admin, 0 for user.)
+- Dual role of ```User``` and ```Admin``` (For admin, in the DB change role to 1 and 0 for user.)
 - Admin can add product, with its quantity and price and can upload product photo too and all is updated in the DB at the same time automatically.
 - Admin can create categories of items in the shop.
 - Users have ```sign up``` and ```sign in``` process with proper password authentication. (Details of new users are automatically updated in the DB).
@@ -29,9 +32,13 @@ git clone https://github.com/smsraj2001/SHOE-SHOP-ECOMMERCE-WEB-APP.git
 - Select the ```SHOE SHOP - MERN STACK``` folder.
 - Open a terminal and then run the following terminal :-
 ```bash 
-npm -i
+npm i
 ```
-- Next in the same folder create a file with name : ```.env``` (No name, just extension) and add the following contents :-
+- Also open a terminal inside ```client``` folder and again enter the same command :-
+```bash 
+npm i
+```
+- Now, again in the ```SHOE SHOP - MERN STACK``` folder create a file with name : ```.env``` (No name, just extension) and add the following contents:-
 ```.env
 MONGODB_URI="Your MongoDB URI"
 JWT_SECRET=dummySecret
@@ -73,6 +80,14 @@ __v : 0
 ```bash 
 npm run dev
 ```
+## IMPORTANT
+- If for an reason , the web app crashes due to deprecated node modules, please enter the following command both in the  ```SHOE SHOP - MERN STACK``` folder and in the ```client``` folder :-
+```bash 
+npm install -g npm-check-updates
+```
+- Then run the ```npm run dev``` command
+- Also this website isn't just about the Shoe - Shop, you ```can change this``` according to your needs, like you can ```add different types of products``` in the DB and change the purpose of website!!!
+
 #### ENJOY THE WEBSITE!!!
 
 #### ```NOTE``` : For any queries/corrections, please feel free to mail : sutharsanraj2001@gmail.com
