@@ -47,6 +47,11 @@ BRAINTREE_PUBLIC_KEY=3q5ngrh78jhpbkc3
 BRAINTREE_PRIVATE_KEY=bd43a1cc61e8218ebe3f76dd04eb6599
 ```
 
+- Also, in the ```client``` folder create a file with name : ```.env``` (No name, just extension) and add the following contents:-
+```.env
+REACT_APP_API_URL=http://localhost:5000/api
+```
+
 #### Steps to connect MONGODB with URI :-
 - Go to link : https://www.mongodb.com/cloud/atlas/register
 - Create the account if not and then sign in. After signing in, create a new cluster, then you will see ```Connect``` option.
