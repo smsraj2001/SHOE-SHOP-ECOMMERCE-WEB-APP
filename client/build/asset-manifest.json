@@ -1,0 +1,29 @@
+{
+  "files": {
+    "main.css": "/static/css/main.b65ffc3e.css",
+    "main.js": "/static/js/main.1874a483.js",
+    "static/media/roboto-all-400-italic.woff": "/static/media/roboto-all-400-italic.63782d1445ad031af14d.woff",
+    "static/media/roboto-all-400-normal.woff": "/static/media/roboto-all-400-normal.b5a0a0df312d3423493b.woff",
+    "static/media/roboto-latin-400-italic.woff2": "/static/media/roboto-latin-400-italic.d022bc70dc1bf7b3425d.woff2",
+    "static/media/roboto-cyrillic-ext-400-italic.woff2": "/static/media/roboto-cyrillic-ext-400-italic.c30985e07ee67f55f3e8.woff2",
+    "static/media/roboto-latin-400-normal.woff2": "/static/media/roboto-latin-400-normal.176f8f5bd5f02b3abfcf.woff2",
+    "static/media/roboto-cyrillic-ext-400-normal.woff2": "/static/media/roboto-cyrillic-ext-400-normal.dd55ea0a2e90d5d86e15.woff2",
+    "static/media/roboto-latin-ext-400-italic.woff2": "/static/media/roboto-latin-ext-400-italic.5ed4cf182892091e3b75.woff2",
+    "static/media/roboto-latin-ext-400-normal.woff2": "/static/media/roboto-latin-ext-400-normal.dcc07bcfcd475f34f20b.woff2",
+    "static/media/roboto-cyrillic-400-italic.woff2": "/static/media/roboto-cyrillic-400-italic.7270d0dbb41cca30909b.woff2",
+    "static/media/roboto-cyrillic-400-normal.woff2": "/static/media/roboto-cyrillic-400-normal.3605d18d8a4ce5bd39c3.woff2",
+    "static/media/roboto-greek-400-italic.woff2": "/static/media/roboto-greek-400-italic.aeaac920d76d2f3697ca.woff2",
+    "static/media/roboto-greek-400-normal.woff2": "/static/media/roboto-greek-400-normal.352cc77aaed5208ce13c.woff2",
+    "static/media/roboto-vietnamese-400-italic.woff2": "/static/media/roboto-vietnamese-400-italic.d8e5b781ee65ffb7d167.woff2",
+    "static/media/roboto-vietnamese-400-normal.woff2": "/static/media/roboto-vietnamese-400-normal.52cebac009baf5592e7d.woff2",
+    "static/media/roboto-greek-ext-400-italic.woff2": "/static/media/roboto-greek-ext-400-italic.26c1478a1bb6b2c2c6b0.woff2",
+    "static/media/roboto-greek-ext-400-normal.woff2": "/static/media/roboto-greek-ext-400-normal.bc7ace6e50c7d9d4d959.woff2",
+    "index.html": "/index.html",
+    "main.b65ffc3e.css.map": "/static/css/main.b65ffc3e.css.map",
+    "main.1874a483.js.map": "/static/js/main.1874a483.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.b65ffc3e.css",
+    "static/js/main.1874a483.js"
+  ]
+}
