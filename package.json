@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "build-client": "npm run build --prefix client",
     "server": "nodemon server.js",
     "client": "npm start --prefix client",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
@@ -12,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ashraf-kabir/mern-ecommerce.git"
+    "url": "git+https://github.com/smsraj2001/SHOE-SHOP-ECOMMERCE-WEB-APP"
   },
   "keywords": [],
   "author": "S M Sutharsan Raj",
