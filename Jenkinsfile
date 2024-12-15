@@ -96,7 +96,7 @@ pipeline {
                 script {
                     // Using the stored Docker credentials
                     withCredentials([usernamePassword(credentialsId: 'docker-creds', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
-                        bat "echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin"
+                        bat "echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% -p dckr_pat_vvMNaN6Su8iM1ca_hiW43DREc1g"
                         
                         // Build Docker image with properly escaped Windows batch syntax
                         bat """
