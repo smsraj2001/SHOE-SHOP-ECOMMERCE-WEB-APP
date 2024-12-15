@@ -1,77 +1,120 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:20' // Node.js Docker image
-        }
-    }
+    agent any
 
     environment {
-        NODE_ENV = 'production'
-        DOCKER_IMAGE = 'smsraj2001/sms-shoe-shop' // Replace with your Docker Hub username and repository name
+        // Node version and paths
+        NODE_VERSION = '20'
+        WORKSPACE = "${WORKSPACE}"
+        
+        // Docker configuration
+        DOCKER_IMAGE = "smsraj2001/shoe-shop"
+        DOCKER_CREDENTIALS = credentials('docker-creds')
+        
+        // Application secrets
+        MONGODB_URI = credentials('mongodb-uri')
+        JWT_SECRET = credentials('jwt-secret')
+        BRAINTREE_MERCHANT_ID = credentials('braintree-merchant')
+        BRAINTREE_PUBLIC_KEY = credentials('braintree-public')
+        BRAINTREE_PRIVATE_KEY = credentials('braintree-private')
     }
 
     stages {
+        stage('Clean Workspace') {
+            steps {
+                bat 'if exist "node_modules" rmdir /s /q node_modules'
+                bat 'if exist "client\\node_modules" rmdir /s /q client\\node_modules'
+            }
+        }
+
         stage('Checkout') {
             steps {
-                // Clone the repository
                 checkout scm
+            }
+        }
+
+        stage('Setup Environment') {
+            steps {
+                script {
+                    // Write server .env file
+                    writeFile file: '.env', text: """
+                        MONGODB_URI=${MONGODB_URI}
+                        JWT_SECRET=${JWT_SECRET}
+                        BRAINTREE_MERCHANT_ID=${BRAINTREE_MERCHANT_ID}
+                        BRAINTREE_PUBLIC_KEY=${BRAINTREE_PUBLIC_KEY}
+                        BRAINTREE_PRIVATE_KEY=${BRAINTREE_PRIVATE_KEY}
+                        NODE_ENV=production
+                        PORT=5000
+                    """
+
+                    // Write client .env file
+                    writeFile file: 'client/.env', text: """
+                        REACT_APP_API_URL=https://shoe-shop-ecommerce-web-app.onrender.com/api
+                        CI=false
+                    """
+                }
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                sh 'npm install'
-                sh 'npm install --prefix client'
-            }
-        }
-
-        stage('Build React App') {
-            steps {
-                sh 'npm run build-client'
-            }
-        }
-
-        stage('Run Tests') {
-            steps {
-                sh 'npm test --prefix client'
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    dockerImage = docker.build("${env.DOCKER_IMAGE}:${env.BUILD_NUMBER}")
+                // Install server dependencies
+                bat 'npm install'
+                
+                // Install client dependencies
+                dir('client') {
+                    bat 'npm install'
                 }
             }
         }
 
-        stage('Push to Docker Hub') {
+        stage('Build Client') {
+            steps {
+                dir('client') {
+                    bat 'npm run build'
+                }
+            }
+        }
+
+        stage('Docker Build & Push') {
             steps {
                 script {
-                    docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
-                        dockerImage.push("${env.BUILD_NUMBER}")
-                        dockerImage.push("latest")
-                    }
+                    // Login to Docker Hub
+                    bat 'echo %DOCKER_CREDENTIALS_PSW%| docker login -u %DOCKER_CREDENTIALS_USR% --password-stdin'
+                    
+                    // Build Docker image
+                    bat "docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} ."
+                    bat "docker tag ${DOCKER_IMAGE}:${BUILD_NUMBER} ${DOCKER_IMAGE}:latest"
+                    
+                    // Push Docker image
+                    bat "docker push ${DOCKER_IMAGE}:${BUILD_NUMBER}"
+                    bat "docker push ${DOCKER_IMAGE}:latest"
                 }
             }
         }
 
         stage('Deploy') {
             steps {
-                // Run the app as a container
-                sh 'docker stop sms-shoe-shop || true'
-                sh 'docker rm sms-shoe-shop || true'
-                sh 'docker run -d --name sms-shoe-shop -p 5000:5000 ${env.DOCKER_IMAGE}:latest'
+                script {
+                    // Stop existing containers
+                    bat 'docker-compose down || exit 0'
+                    
+                    // Start new containers
+                    bat 'docker-compose up -d'
+                }
             }
         }
     }
 
     post {
         always {
-            echo 'Pipeline completed.'
+            // Cleanup
+            bat 'docker system prune -f'
+        }
+        success {
+            echo 'Pipeline succeeded! Application deployed successfully.'
         }
         failure {
-            echo 'Pipeline failed.'
+            echo 'Pipeline failed! Check the logs for details.'
         }
     }
 }
