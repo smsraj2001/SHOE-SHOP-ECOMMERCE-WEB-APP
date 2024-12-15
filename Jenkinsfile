@@ -8,9 +8,10 @@ pipeline {
         
         // Docker configuration
         DOCKER_IMAGE = "smsraj2001/shoe-shop"
-        DOCKER_CREDENTIALS = credentials('docker-creds')
         
-        // Application secrets
+        // Loading credentials into environment variables
+        DOCKER_CREDENTIALS = credentials('docker-creds')
+        GITHUB_CREDENTIALS = credentials('github-creds')
         MONGODB_URI = credentials('mongodb-uri')
         JWT_SECRET = credentials('jwt-secret')
         BRAINTREE_MERCHANT_ID = credentials('braintree-merchant')
@@ -21,7 +22,6 @@ pipeline {
     stages {
         stage('Clean Workspace') {
             steps {
-                // Clean workspace and node_modules
                 bat 'if exist "node_modules" rmdir /s /q node_modules'
                 bat 'if exist "client\\node_modules" rmdir /s /q client\\node_modules'
                 bat 'if exist "client\\build" rmdir /s /q client\\build'
@@ -30,40 +30,32 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                checkout scm
+                git credentialsId: 'github-creds', 
+                    url: 'https://github.com/smsraj2001/SHOE-SHOP-ECOMMERCE-WEB-APP'
             }
         }
 
         stage('Setup Environment') {
             steps {
                 script {
-                    // Write server .env file
-                    writeFile file: '.env', text: """
-                        MONGODB_URI=${MONGODB_URI}
-                        JWT_SECRET=${JWT_SECRET}
-                        BRAINTREE_MERCHANT_ID=${BRAINTREE_MERCHANT_ID}
-                        BRAINTREE_PUBLIC_KEY=${BRAINTREE_PUBLIC_KEY}
-                        BRAINTREE_PRIVATE_KEY=${BRAINTREE_PRIVATE_KEY}
-                        NODE_ENV=production
-                        PORT=5000
-                    """
+                    writeFile file: '.env', text: """MONGODB_URI=${MONGODB_URI}
+JWT_SECRET=${JWT_SECRET}
+BRAINTREE_MERCHANT_ID=${BRAINTREE_MERCHANT_ID}
+BRAINTREE_PUBLIC_KEY=${BRAINTREE_PUBLIC_KEY}
+BRAINTREE_PRIVATE_KEY=${BRAINTREE_PRIVATE_KEY}
+NODE_ENV=production
+PORT=5000"""
 
-                    // Write client .env file with CI=false to prevent treating warnings as errors
-                    writeFile file: 'client/.env', text: """
-                        REACT_APP_API_URL=https://shoe-shop-ecommerce-web-app.onrender.com/api
-                        DISABLE_ESLINT_PLUGIN=true
-                        CI=false
-                    """
+                    writeFile file: 'client/.env', text: """REACT_APP_API_URL=https://shoe-shop-ecommerce-web-app.onrender.com/api
+DISABLE_ESLINT_PLUGIN=true
+CI=false"""
                 }
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                // Install server dependencies
                 bat 'npm install'
-                
-                // Install client dependencies and required ESLint plugins
                 dir('client') {
                     bat 'npm install'
                     bat 'npm install --save-dev @babel/plugin-proposal-private-property-in-object'
@@ -74,7 +66,6 @@ pipeline {
         stage('Lint Check') {
             steps {
                 dir('client') {
-                    // Run ESLint with --max-warnings flag to allow warnings but catch errors
                     bat 'npm run lint --if-present || exit 0'
                 }
             }
@@ -83,7 +74,6 @@ pipeline {
         stage('Build Client') {
             steps {
                 dir('client') {
-                    // Set environment variables for the build
                     withEnv(['CI=false', 'GENERATE_SOURCEMAP=false']) {
                         bat 'npm run build'
                     }
@@ -94,24 +84,25 @@ pipeline {
         stage('Docker Build & Push') {
             steps {
                 script {
-                    // Login to Docker Hub
-                    bat 'echo %DOCKER_CREDENTIALS_PSW%| docker login -u %DOCKER_CREDENTIALS_USR% --password-stdin'
-                    
-                    // Build Docker image with build args
-                    bat """
-                        docker build --no-cache ^
-                        --build-arg MONGODB_URI=${MONGODB_URI} ^
-                        --build-arg JWT_SECRET=${JWT_SECRET} ^
-                        --build-arg BRAINTREE_MERCHANT_ID=${BRAINTREE_MERCHANT_ID} ^
-                        --build-arg BRAINTREE_PUBLIC_KEY=${BRAINTREE_PUBLIC_KEY} ^
-                        --build-arg BRAINTREE_PRIVATE_KEY=${BRAINTREE_PRIVATE_KEY} ^
-                        -t ${DOCKER_IMAGE}:${BUILD_NUMBER} .
-                    """
-                    bat "docker tag ${DOCKER_IMAGE}:${BUILD_NUMBER} ${DOCKER_IMAGE}:latest"
-                    
-                    // Push Docker image
-                    bat "docker push ${DOCKER_IMAGE}:${BUILD_NUMBER}"
-                    bat "docker push ${DOCKER_IMAGE}:latest"
+                    // Using the stored Docker credentials
+                    withCredentials([usernamePassword(credentialsId: 'docker-creds', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                        bat "echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin"
+                        
+                        // Build Docker image with properly escaped Windows batch syntax
+                        bat """
+                            docker build --no-cache ^
+                            --build-arg MONGODB_URI=%MONGODB_URI% ^
+                            --build-arg JWT_SECRET=%JWT_SECRET% ^
+                            --build-arg BRAINTREE_MERCHANT_ID=%BRAINTREE_MERCHANT_ID% ^
+                            --build-arg BRAINTREE_PUBLIC_KEY=%BRAINTREE_PUBLIC_KEY% ^
+                            --build-arg BRAINTREE_PRIVATE_KEY=%BRAINTREE_PRIVATE_KEY% ^
+                            -t %DOCKER_IMAGE%:%BUILD_NUMBER% .
+                        """
+                        
+                        bat "docker tag %DOCKER_IMAGE%:%BUILD_NUMBER% %DOCKER_IMAGE%:latest"
+                        bat "docker push %DOCKER_IMAGE%:%BUILD_NUMBER%"
+                        bat "docker push %DOCKER_IMAGE%:latest"
+                    }
                 }
             }
         }
@@ -120,13 +111,10 @@ pipeline {
             steps {
                 script {
                     try {
-                        // Stop existing containers
                         bat 'docker-compose down'
                     } catch (Exception e) {
                         echo 'No existing containers to stop'
                     }
-                    
-                    // Start new containers
                     bat 'docker-compose up -d'
                 }
             }
@@ -135,14 +123,13 @@ pipeline {
 
     post {
         always {
-            // Cleanup
             bat 'docker system prune -f'
-            
-            // Clean workspace after successful deployment
-            cleanWs(cleanWhenNotBuilt: false,
-                   deleteDirs: true,
-                   disableDeferredWipeout: true,
-                   notFailBuild: true)
+            cleanWs(
+                cleanWhenNotBuilt: false,
+                deleteDirs: true,
+                disableDeferredWipeout: true,
+                notFailBuild: true
+            )
         }
         success {
             echo 'Pipeline succeeded! Application deployed successfully.'
