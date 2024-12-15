@@ -142,10 +142,10 @@ pipeline {
             )
         }
         success {
-            echo 'Pipeline succeeded! Application deployed successfully.'
+            echo 'Pipeline succeeded! Application deployed successfully...'
         }
         failure {
-            echo 'Pipeline failed! Check the logs for details.'
+            echo 'Pipeline failed! Check the logs for details...'
         }
     }
 }
