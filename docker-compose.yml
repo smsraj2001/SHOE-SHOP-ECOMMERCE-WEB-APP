@@ -6,6 +6,6 @@ services:
       - "3000:3000"
   server:
     build:
-      context: ./server
+      context: .
     ports:
       - "5000:5000"
