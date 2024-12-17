@@ -2,12 +2,17 @@ services:
   server:
     build:
       context: .
+      dockerfile: Dockerfile.server
     ports:
       - "5000:5000"
     volumes:
       - .:/app
+
   client:
-    volumes:
-      - ./client:/client
+    build:
+      context: .
+      dockerfile: Dockerfile.client
     ports:
       - "3000:3000"
+    volumes:
+      - ./client:/app

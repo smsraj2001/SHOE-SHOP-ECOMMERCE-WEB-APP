@@ -94,24 +94,33 @@ pipeline {
         stage('Docker Build & Push') {
             steps {
                 script {
-                    // Using the stored Docker credentials
                     withCredentials([usernamePassword(credentialsId: 'docker-creds', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
                         bat "echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD%"
-                        
-                        // Build Docker image with properly escaped Windows batch syntax
+
+                        // Build the server Docker image
                         bat """
-                            docker build --no-cache ^
+                            docker build --no-cache -f Dockerfile.server ^
                             --build-arg MONGODB_URI=%MONGODB_URI% ^
                             --build-arg JWT_SECRET=%JWT_SECRET% ^
                             --build-arg BRAINTREE_MERCHANT_ID=%BRAINTREE_MERCHANT_ID% ^
                             --build-arg BRAINTREE_PUBLIC_KEY=%BRAINTREE_PUBLIC_KEY% ^
                             --build-arg BRAINTREE_PRIVATE_KEY=%BRAINTREE_PRIVATE_KEY% ^
-                            -t %DOCKER_IMAGE%:%BUILD_NUMBER% .
+                            -t %DOCKER_IMAGE%:server-%BUILD_NUMBER% .
                         """
-                        
-                        bat "docker tag %DOCKER_IMAGE%:%BUILD_NUMBER% %DOCKER_IMAGE%:latest"
-                        bat "docker push %DOCKER_IMAGE%:%BUILD_NUMBER%"
-                        bat "docker push %DOCKER_IMAGE%:latest"
+
+                        // Build the client Docker image
+                        bat """
+                            docker build --no-cache -f Dockerfile.client ^
+                            --build-arg REACT_APP_API_URL=https://shoe-shop-ecommerce-web-app.onrender.com/api ^
+                            -t %DOCKER_IMAGE%:client-%BUILD_NUMBER% .
+                        """
+
+                        bat "docker tag %DOCKER_IMAGE%:server-%BUILD_NUMBER% %DOCKER_IMAGE%:server-latest"
+                        bat "docker tag %DOCKER_IMAGE%:client-%BUILD_NUMBER% %DOCKER_IMAGE%:client-latest"
+                        bat "docker push %DOCKER_IMAGE%:server-%BUILD_NUMBER%"
+                        bat "docker push %DOCKER_IMAGE%:client-%BUILD_NUMBER%"
+                        bat "docker push %DOCKER_IMAGE%:server-latest"
+                        bat "docker push %DOCKER_IMAGE%:client-latest"
                     }
                 }
             }
