@@ -2,18 +2,20 @@
 FROM node:20
 
 # Set the working directory
-WORKDIR /app
+WORKDIR /app/client
 
-# Copy package.json and install dependencies
-COPY package.json ./
+# Copy client package.json and package-lock.json
+COPY client/package*.json ./
+
+# Install dependencies
 RUN npm install --legacy-peer-deps
 
 # Copy entire client folder
-COPY . .
+COPY client/ .
 
-# Build React app
+# Build React app (for potential future use or artifact)
 RUN npm run build
 
-# Expose the client port
-EXPOSE 3000
-CMD ["npm", "start"]
+# This image is now just for build verification
+# No need to expose a port or start a server
+CMD ["echo", "Client build completed"]

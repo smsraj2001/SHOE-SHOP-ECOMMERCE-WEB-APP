@@ -97,7 +97,7 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'docker-creds', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
                         bat "echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD%"
 
-                        // Build the server Docker image
+                        // Build the server Docker image (keep as is)
                         bat """
                             docker build --no-cache -f Dockerfile.server ^
                             --build-arg MONGODB_URI=%MONGODB_URI% ^
@@ -108,19 +108,16 @@ pipeline {
                             -t %DOCKER_IMAGE%:server-%BUILD_NUMBER% .
                         """
 
-                        // Build the client Docker image
+                        // Simplified client image build
                         bat """
                             docker build --no-cache -f client/Dockerfile.client ^
-                            --build-arg REACT_APP_API_URL=https://shoe-shop-ecommerce-web-app.onrender.com/api ^
                             -t %DOCKER_IMAGE%:client-%BUILD_NUMBER% .
                         """
 
+                        // Push server images
                         bat "docker tag %DOCKER_IMAGE%:server-%BUILD_NUMBER% %DOCKER_IMAGE%:server-latest"
-                        bat "docker tag %DOCKER_IMAGE%:client-%BUILD_NUMBER% %DOCKER_IMAGE%:client-latest"
                         bat "docker push %DOCKER_IMAGE%:server-%BUILD_NUMBER%"
-                        bat "docker push %DOCKER_IMAGE%:client-%BUILD_NUMBER%"
                         bat "docker push %DOCKER_IMAGE%:server-latest"
-                        bat "docker push %DOCKER_IMAGE%:client-latest"
                     }
                 }
             }

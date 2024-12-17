@@ -18,19 +18,20 @@
 # EXPOSE 5000
 # CMD ["npm", "run", "start"]
 
-# Use Node.js as the base image
 FROM node:20
 
 # Set the working directory
 WORKDIR /app
 
-# Copy package.json and install dependencies
+# Copy server package.json and install dependencies
 COPY package.json ./
 RUN npm install
 
-# Copy server code
-COPY . ./
+# Copy entire server code
+COPY . .
 
-# Expose the server port and start the server
+# Expose the server port
 EXPOSE 5000
+
+# Start the server
 CMD ["npm", "run", "start"]
