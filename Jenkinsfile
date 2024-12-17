@@ -110,7 +110,7 @@ pipeline {
 
                         // Build the client Docker image
                         bat """
-                            docker build --no-cache -f Dockerfile.client ^
+                            docker build --no-cache -f client/Dockerfile.client ^
                             --build-arg REACT_APP_API_URL=https://shoe-shop-ecommerce-web-app.onrender.com/api ^
                             -t %DOCKER_IMAGE%:client-%BUILD_NUMBER% .
                         """
