@@ -1,11 +1,13 @@
 services:
-  client:
-    build:
-      context: ./client
-    ports:
-      - "3000:3000"
   server:
     build:
       context: .
     ports:
       - "5000:5000"
+    volumes:
+      - .:/app
+  client:
+    volumes:
+      - ./client:/client
+    ports:
+      - "3000:3000"
