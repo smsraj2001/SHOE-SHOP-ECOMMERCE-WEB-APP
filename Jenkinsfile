@@ -83,10 +83,7 @@ pipeline {
         stage('Build Client') {
             steps {
                 dir('client') {
-                    // Set environment variables for the build
-                    withEnv(['CI=false', 'GENERATE_SOURCEMAP=false']) {
-                        bat 'npm run build'
-                    }
+                    bat 'set "CI=false" && set "GENERATE_SOURCEMAP=false" && npm run build'
                 }
             }
         }
@@ -96,11 +93,11 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-creds', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
                         // Login to Docker Hub
-                        bat "docker login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD%"
+                        bat "echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin"
 
-                        // Build Server Image
+                        // Build and push server image
                         bat """
-                            docker build --no-cache -f Dockerfile.server ^
+                            docker build -f Dockerfile.server ^
                             --build-arg MONGODB_URI=%MONGODB_URI% ^
                             --build-arg JWT_SECRET=%JWT_SECRET% ^
                             --build-arg BRAINTREE_MERCHANT_ID=%BRAINTREE_MERCHANT_ID% ^
@@ -110,24 +107,18 @@ pipeline {
                             -t %DOCKER_IMAGE%:server-latest .
                         """
 
-                        // Build Client Image
+                        // Build and push client image
                         bat """
-                            docker build --no-cache -f client/Dockerfile.client ^
+                            docker build -f client/Dockerfile.client ^
                             -t %DOCKER_IMAGE%:client-%BUILD_NUMBER% ^
                             -t %DOCKER_IMAGE%:client-latest .
                         """
 
-                        // Push Server Images
-                        bat """
-                            docker push %DOCKER_IMAGE%:server-%BUILD_NUMBER%
-                            docker push %DOCKER_IMAGE%:server-latest
-                        """
-
-                        // Push Client Images
-                        bat """
-                            docker push %DOCKER_IMAGE%:client-%BUILD_NUMBER%
-                            docker push %DOCKER_IMAGE%:client-latest
-                        """
+                        // Push images
+                        bat "docker push %DOCKER_IMAGE%:server-%BUILD_NUMBER%"
+                        bat "docker push %DOCKER_IMAGE%:server-latest"
+                        bat "docker push %DOCKER_IMAGE%:client-%BUILD_NUMBER%"
+                        bat "docker push %DOCKER_IMAGE%:client-latest"
                     }
                 }
             }

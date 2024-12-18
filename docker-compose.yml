@@ -1,18 +1,19 @@
 services:
   server:
-    build:
-      context: .
-      dockerfile: Dockerfile.server
+    image: smsraj2001/shoe-shop:server-latest
     ports:
       - "5000:5000"
-    volumes:
-      - .:/app
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=${MONGODB_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - BRAINTREE_MERCHANT_ID=${BRAINTREE_MERCHANT_ID}
+      - BRAINTREE_PUBLIC_KEY=${BRAINTREE_PUBLIC_KEY}
+      - BRAINTREE_PRIVATE_KEY=${BRAINTREE_PRIVATE_KEY}
 
   client:
-    build:
-      context: ./client
-      dockerfile: Dockerfile.client
+    image: smsraj2001/shoe-shop:client-latest
     ports:
       - "3000:3000"
-    volumes:
-      - ./client:/app
+    depends_on:
+      - server
