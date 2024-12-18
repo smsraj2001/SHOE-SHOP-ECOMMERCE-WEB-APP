@@ -66,7 +66,6 @@ pipeline {
                 // Install client dependencies and required ESLint plugins
                 dir('client') {
                     bat 'npm install'
-                    bat 'npm install --legacy-peer-deps'
                     bat 'npm install --save-dev @babel/plugin-proposal-private-property-in-object'
                 }
             }
@@ -84,18 +83,9 @@ pipeline {
         stage('Build Client') {
             steps {
                 dir('client') {
-                    script {
-                        try {
-                            // Set environment variables for the build
-                            withEnv(['CI=false', 'GENERATE_SOURCEMAP=false']) {
-                                bat 'npm run build'
-                            }
-                        } catch (Exception e) {
-                            echo "Client build failed: ${e.getMessage()}"
-                            // Print npm logs for debugging
-                            bat 'type C:\\Users\\%USERNAME%\\.npm\\_logs\\*'
-                            error "Client build failed"
-                        }
+                    // Set environment variables for the build
+                    withEnv(['CI=false', 'GENERATE_SOURCEMAP=false']) {
+                        bat 'npm run build'
                     }
                 }
             }
@@ -159,7 +149,6 @@ pipeline {
 
     post {
         always {
-            // Cleanup Docker system and workspace
             bat 'docker system prune -f'
             cleanWs(
                 cleanWhenNotBuilt: false,
