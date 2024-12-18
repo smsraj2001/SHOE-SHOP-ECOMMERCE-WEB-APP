@@ -18,13 +18,25 @@ pipeline {
         BRAINTREE_PRIVATE_KEY = credentials('braintree-private')
     }
 
+    tools {
+        nodejs "Node 20"
+    }
+
     stages {
         stage('Clean Workspace') {
             steps {
                 // Clean workspace and node_modules
-                bat 'if exist "node_modules" rmdir /s /q node_modules'
-                bat 'if exist "client\\node_modules" rmdir /s /q client\\node_modules'
-                bat 'if exist "client\\build" rmdir /s /q client\\build'
+                script {
+                    if (fileExists('node_modules')) {
+                        bat 'rmdir /s /q node_modules'
+                    }
+                    if (fileExists('client/node_modules')) {
+                        bat 'rmdir /s /q client/node_modules'
+                    }
+                    if (fileExists('client/build')) {
+                        bat 'rmdir /s /q client/build'
+                    }
+                }
             }
         }
 
@@ -39,20 +51,20 @@ pipeline {
                 script {
                     // Write server .env file
                     writeFile file: '.env', text: """
-                        MONGODB_URI=${MONGODB_URI}
-                        JWT_SECRET=${JWT_SECRET}
-                        BRAINTREE_MERCHANT_ID=${BRAINTREE_MERCHANT_ID}
-                        BRAINTREE_PUBLIC_KEY=${BRAINTREE_PUBLIC_KEY}
-                        BRAINTREE_PRIVATE_KEY=${BRAINTREE_PRIVATE_KEY}
-                        NODE_ENV=production
-                        PORT=5000
+MONGODB_URI=${MONGODB_URI}
+JWT_SECRET=${JWT_SECRET}
+BRAINTREE_MERCHANT_ID=${BRAINTREE_MERCHANT_ID}
+BRAINTREE_PUBLIC_KEY=${BRAINTREE_PUBLIC_KEY}
+BRAINTREE_PRIVATE_KEY=${BRAINTREE_PRIVATE_KEY}
+NODE_ENV=production
+PORT=5000
                     """
 
                     // Write client .env file with CI=false to prevent treating warnings as errors
                     writeFile file: 'client/.env', text: """
-                        REACT_APP_API_URL=https://shoe-shop-ecommerce-web-app.onrender.com/api
-                        DISABLE_ESLINT_PLUGIN=true
-                        CI=false
+REACT_APP_API_URL=https://shoe-shop-ecommerce-web-app.onrender.com/api
+DISABLE_ESLINT_PLUGIN=true
+CI=false
                     """
                 }
             }
@@ -63,9 +75,10 @@ pipeline {
                 // Install server dependencies
                 bat 'npm install'
                 
-                // Install client dependencies and required ESLint plugins
+                // Install client dependencies with additional Babel plugin
                 dir('client') {
-                    bat 'npm install'
+                    bat 'npm cache clean --force'
+                    bat 'npm install --legacy-peer-deps'
                     bat 'npm install --save-dev @babel/plugin-proposal-private-property-in-object'
                 }
             }
@@ -74,7 +87,7 @@ pipeline {
         stage('Lint Check') {
             steps {
                 dir('client') {
-                    // Run ESLint with --max-warnings flag to allow warnings but catch errors
+                    // Run ESLint with maximum warnings allowed
                     bat 'npm run lint --if-present || exit 0'
                 }
             }
@@ -83,9 +96,18 @@ pipeline {
         stage('Build Client') {
             steps {
                 dir('client') {
-                    // Set environment variables for the build
-                    withEnv(['CI=false', 'GENERATE_SOURCEMAP=false']) {
-                        bat 'npm run build'
+                    script {
+                        try {
+                            // Set environment variables for the build
+                            withEnv(['CI=false', 'GENERATE_SOURCEMAP=false']) {
+                                bat 'npm run build'
+                            }
+                        } catch (Exception e) {
+                            echo "Client build failed: ${e.getMessage()}"
+                            // Print npm logs for debugging
+                            bat 'type C:\\Users\\%USERNAME%\\.npm\\_logs\\*'
+                            error "Client build failed"
+                        }
                     }
                 }
             }
@@ -149,6 +171,7 @@ pipeline {
 
     post {
         always {
+            // Cleanup Docker system and workspace
             bat 'docker system prune -f'
             cleanWs(
                 cleanWhenNotBuilt: false,

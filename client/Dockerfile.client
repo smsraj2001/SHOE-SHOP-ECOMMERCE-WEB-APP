@@ -1,4 +1,4 @@
-# Use Node.js as the base image
+# Use Node.js 20 as the base image
 FROM node:20
 
 # Set the working directory
@@ -7,15 +7,14 @@ WORKDIR /app/client
 # Copy client package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies
+# Install dependencies with legacy-peer-deps for potential compatibility
 RUN npm install --legacy-peer-deps
 
 # Copy entire client folder
 COPY . .
 
-# Build React app (for potential future use or artifact)
-RUN npm run build
+# Explicitly install @babel plugin to resolve potential build issues
+RUN npm install --save-dev @babel/plugin-proposal-private-property-in-object
 
-# This image is now just for build verification
-# No need to expose a port or start a server
-CMD ["echo", "Client build completed"]
+# Build React app
+RUN npm run build
