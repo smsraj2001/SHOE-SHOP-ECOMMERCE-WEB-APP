@@ -5,13 +5,13 @@ FROM node:20
 WORKDIR /app/client
 
 # Copy client package.json and package-lock.json
-COPY client/package*.json ./
+COPY package*.json ./
 
 # Install dependencies
 RUN npm install --legacy-peer-deps
 
 # Copy entire client folder
-COPY client/ .
+COPY . .
 
 # Build React app (for potential future use or artifact)
 RUN npm run build

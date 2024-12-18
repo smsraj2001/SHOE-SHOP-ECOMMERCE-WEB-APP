@@ -95,9 +95,10 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-creds', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
-                        bat "echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD%"
+                        // Login to Docker Hub
+                        bat "docker login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD%"
 
-                        // Build the server Docker image (keep as is)
+                        // Build Server Image
                         bat """
                             docker build --no-cache -f Dockerfile.server ^
                             --build-arg MONGODB_URI=%MONGODB_URI% ^
@@ -105,19 +106,28 @@ pipeline {
                             --build-arg BRAINTREE_MERCHANT_ID=%BRAINTREE_MERCHANT_ID% ^
                             --build-arg BRAINTREE_PUBLIC_KEY=%BRAINTREE_PUBLIC_KEY% ^
                             --build-arg BRAINTREE_PRIVATE_KEY=%BRAINTREE_PRIVATE_KEY% ^
-                            -t %DOCKER_IMAGE%:server-%BUILD_NUMBER% .
+                            -t %DOCKER_IMAGE%:server-%BUILD_NUMBER% ^
+                            -t %DOCKER_IMAGE%:server-latest .
                         """
 
-                        // Simplified client image build
+                        // Build Client Image
                         bat """
                             docker build --no-cache -f client/Dockerfile.client ^
-                            -t %DOCKER_IMAGE%:client-%BUILD_NUMBER% .
+                            -t %DOCKER_IMAGE%:client-%BUILD_NUMBER% ^
+                            -t %DOCKER_IMAGE%:client-latest .
                         """
 
-                        // Push server images
-                        bat "docker tag %DOCKER_IMAGE%:server-%BUILD_NUMBER% %DOCKER_IMAGE%:server-latest"
-                        bat "docker push %DOCKER_IMAGE%:server-%BUILD_NUMBER%"
-                        bat "docker push %DOCKER_IMAGE%:server-latest"
+                        // Push Server Images
+                        bat """
+                            docker push %DOCKER_IMAGE%:server-%BUILD_NUMBER%
+                            docker push %DOCKER_IMAGE%:server-latest
+                        """
+
+                        // Push Client Images
+                        bat """
+                            docker push %DOCKER_IMAGE%:client-%BUILD_NUMBER%
+                            docker push %DOCKER_IMAGE%:client-latest
+                        """
                     }
                 }
             }
