@@ -93,8 +93,7 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-creds', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
                         // Login to Docker Hub
-                        bat "echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin"
-
+                        bat "docker login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD%"
                         // Build and push server image
                         bat """
                             docker build -f Dockerfile.server ^
